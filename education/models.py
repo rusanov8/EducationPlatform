@@ -22,7 +22,7 @@ class Lesson(models.Model):
     description = models.TextField(verbose_name='Описание')
     preview = models.ImageField(upload_to='lesson_previews/', verbose_name='Превью', blank=True, null=True)
     video_url = models.URLField(verbose_name='Ссылка на видео')
-    course = models.ForeignKey(Course, on_delete=models.CASCADE, verbose_name='Курс')
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, verbose_name='Курс', related_name='lessons')
 
     def __str__(self):
         return self.title
@@ -31,5 +31,6 @@ class Lesson(models.Model):
         verbose_name = 'Урок'
         verbose_name_plural = 'Уроки'
         db_table = 'lessons'
+
 
 

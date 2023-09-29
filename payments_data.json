@@ -1,0 +1,57 @@
+[
+    {
+        "model": "payments.payment",
+        "pk": 1,
+        "fields": {
+            "user": 1,
+            "date": "2023-09-01",
+            "course": 1,
+            "amount": "49.99",
+            "payment_method": "cash"
+        }
+    },
+    {
+        "model": "payments.payment",
+        "pk": 2,
+        "fields": {
+            "user": 2,
+            "date": "2023-09-02",
+            "lesson": 3,
+            "amount": "19.99",
+            "payment_method": "transfer"
+        }
+    },
+    {
+        "model": "payments.payment",
+        "pk": 3,
+        "fields": {
+            "user": 3,
+            "date": "2023-09-03",
+            "course": 2,
+            "amount": "39.99",
+            "payment_method": "cash"
+        }
+    },
+    {
+        "model": "payments.payment",
+        "pk": 4,
+        "fields": {
+            "user": 1,
+            "date": "2023-09-04",
+            "lesson": 5,
+            "amount": "14.99",
+            "payment_method": "transfer"
+        }
+    },
+    {
+        "model": "payments.payment",
+        "pk": 5,
+        "fields": {
+            "user": 5,
+            "date": "2023-09-05",
+            "course": 3,
+            "amount": "29.99",
+            "payment_method": "cash"
+        }
+    }
+]
