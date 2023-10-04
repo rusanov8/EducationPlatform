@@ -1,35 +1,42 @@
 from rest_framework import generics, status
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 
 from users.models import User
-from users.serializers import UserSerializer, UserCreateSerializer, UserProfileSerializer
-
-
-class UserRetrieveUpdateAPIView(generics.RetrieveUpdateAPIView):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
+from users.permissions import IsOwner
+from users.serializers import UserCreateSerializer, UserUpdateProfileSerializer, SelfProfileSerializer, \
+    OtherProfilesSerializer
 
 
 class UserCreateApiView(generics.CreateAPIView):
     serializer_class = UserCreateSerializer
+    permission_classes = [IsAdminUser]
 
 
 class UserListApiView(generics.ListAPIView):
     queryset = User.objects.all()
-    serializer_class = UserSerializer
+    serializer_class = OtherProfilesSerializer
+    permission_classes = [IsAuthenticated]
 
 
 class UserDestroyAPIView(generics.DestroyAPIView):
     queryset = User.objects.all()
 
 
-class UserProfileView(APIView):
-    def get(self, request, pk):
-        try:
-            user = User.objects.get(pk=pk)
-            serializer = UserProfileSerializer(user)
-            return Response(serializer.data)
-        except User.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+class UserProfileView(generics.RetrieveAPIView):
+    queryset = User.objects.all()
+    permission_classes = [IsAuthenticated]
+
+    def get_serializer_class(self):
+        if self.request.user == self.get_object():
+            return SelfProfileSerializer
+        else:
+            return OtherProfilesSerializer
+
+
+class UserUpdateView(generics.UpdateAPIView):
+    serializer_class = UserUpdateProfileSerializer
+    queryset = User.objects.all()
+    permission_classes = [IsAuthenticated, IsOwner]
+
+
+
