@@ -4,6 +4,7 @@ from users.models import User
 
 
 class Course(models.Model):
+    """Модель курса"""
 
     title = models.CharField(max_length=55, verbose_name='Название')
     preview = models.ImageField(upload_to='course_previews/', verbose_name='Превью', blank=True, null=True)
@@ -20,6 +21,7 @@ class Course(models.Model):
 
 
 class Lesson(models.Model):
+    """Модель урока"""
 
     title = models.CharField(max_length=255, verbose_name='Название')
     description = models.TextField(verbose_name='Описание')
@@ -34,6 +36,26 @@ class Lesson(models.Model):
         verbose_name = 'Урок'
         verbose_name_plural = 'Уроки'
         db_table = 'lessons'
+
+
+class CourseSubscription(models.Model):
+    """Модель подписки"""
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='subscribe')
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='subscribe')
+    is_subscribed = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f'Подписка пользователя {self.user.email} на курс {self.course.title}'
+
+    class Meta:
+        verbose_name = 'Подписка'
+        verbose_name_plural = 'Подписки'
+        db_table = 'course_subscription'
+        unique_together = ('user', 'course')
+
+
+
 
 
 
