@@ -12,23 +12,19 @@ class Payment(models.Model):
     )
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='Пользователь', related_name='payments')
-    date = models.DateField(verbose_name='Дата оплаты')
 
     course = models.ForeignKey(Course, on_delete=models.CASCADE, null=True, blank=True, related_name='payment')
-    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, null=True, blank=True, related_name='payment')
 
-    amount = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Сумма оплаты')
+    amount = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Сумма оплаты', default=0)
     payment_method = models.CharField(max_length=30, choices=PAYMENT_METHODS, verbose_name='Способ оплаты')
+    payment_date = models.DateField(auto_now_add=True, verbose_name='Дата платежа')
 
     def __str__(self):
-        if self.course:
-            return f'Платеж от {self.user} за курс "{self.course}"'
-        else:
-            return f'Платеж от {self.user} за урок "{self.lesson}"'
+        return f'Платеж от {self.user} за курс "{self.course}"'
 
     class Meta:
-        verbose_name = ''
-        verbose_name_plural = ''
-        db_table = 'Платежи'
-        ordering = ('-date',)
+        verbose_name = 'Платеж'
+        verbose_name_plural = 'Платежи'
+        db_table = 'payments'
+        ordering = ('-payment_date',)
 
