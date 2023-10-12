@@ -1,39 +1,46 @@
 from rest_framework import viewsets, generics
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework import status
 
 from education.models import Course, Lesson, CourseSubscription
 from education.paginators import BasePaginator
 from education.permissions import IsModerator, IsCourseOwner, IsLessonOwner
-from education.serializers import CourseSerializer, LessonSerializer
+from education.serializers import CourseSerializer, LessonSerializer, CourseDetailSerializer
 
 
 class CourseViewSet(viewsets.ModelViewSet):
-    serializer_class = CourseSerializer
-    queryset = Course.objects.all()
-    pagination_class = BasePaginator
+    """
+    Manage courses, including creation, listing, and updates.
 
+    This viewset allows you to perform various operations related to courses,
+    such as creating new courses, listing available courses, and updating course details.
+    """
+
+    queryset = Course.objects.select_related('owner').prefetch_related('lessons')
+    pagination_class = BasePaginator
 
     def perform_create(self, serializer):
         new_course = serializer.save()
         new_course.owner = self.request.user
         new_course.save()
 
+    def get_serializer_class(self):
+        if self.request.query_params.get('detail') == 'True':
+            return CourseDetailSerializer
+        else:
+            return CourseSerializer
+
     def get_permissions(self):
 
         if self.action in ['list', 'retrieve']:
-            # Разрешить просматривать курсы для всех, включая модераторов и владельцев
             permission_classes = [IsAuthenticated]
         elif self.action in ['update', 'partial_update']:
-            # Разрешить редактировать курсы только модераторам и владельцам
             permission_classes = [IsModerator, IsCourseOwner]
         elif self.action == 'create':
-            # Разрешить создавать курсы только авторизованным пользователям
             permission_classes = [IsAuthenticated & ~IsModerator]
         elif self.action == 'destroy':
-            # Разрешить удалять курсы только владельцам
             permission_classes = [IsCourseOwner]
         else:
             permission_classes = []
@@ -42,21 +49,34 @@ class CourseViewSet(viewsets.ModelViewSet):
 
 
 class LessonCreateApiView(generics.CreateAPIView):
+    """
+    Create new lessons within a course.
+
+    This view allows authenticated users to create new lessons within a course.
+    """
     serializer_class = LessonSerializer
-    # Создание уроков разрешено только авторизованным пользователям
     permission_classes = [IsAuthenticated & ~IsModerator]
 
 
 class LessonListApiView(generics.ListAPIView):
+    """
+    List available lessons.
+
+    This view allows authenticated users to list all available lessons.
+    """
     serializer_class = LessonSerializer
     queryset = Lesson.objects.all()
     pagination_class = BasePaginator
 
-    # Просмотр списка уроков разрешен авторизованным пользователям, включая модераторов и владельцев уроков.
     permission_classes = [IsAuthenticated]
 
 
 class LessonListForCourseAPIView(generics.ListAPIView):
+    """
+    List lessons for a specific course.
+
+    This view allows authenticated users to list lessons associated with a specific course.
+    """
     serializer_class = LessonSerializer
     queryset = Lesson.objects.all()
     permission_classes = [IsAuthenticated]
@@ -69,22 +89,36 @@ class LessonListForCourseAPIView(generics.ListAPIView):
 
 
 class LessonRetrieveAPIView(generics.RetrieveAPIView):
+    """
+    Retrieve lesson details.
+
+    This view allows users to retrieve details of a specific lesson.
+    Access is granted to moderators and lesson owners.
+    """
     serializer_class = LessonSerializer
     queryset = Lesson.objects.all()
 
-    # Просмотр отдельного урока разрешен только модераторам или владельцам
     permission_classes = [IsModerator | IsLessonOwner]
 
 
 class LessonUpdateAPIView(generics.UpdateAPIView):
+    """
+    Update lesson details.
+
+    This view allows moderators and lesson owners to update lesson details.
+    """
     serializer_class = LessonSerializer
     queryset = Lesson.objects.all()
 
-    # # Редактирование уроков разрешено только модераторы и владельцы уроков
-    # permission_classes = [IsModerator | IsLessonOwner]
+    permission_classes = [IsModerator | IsLessonOwner]
 
 
 class LessonDestroyAPIView(generics.DestroyAPIView):
+    """
+    Delete a lesson.
+
+    This view allows lesson owners to delete a lesson.
+    """
     queryset = Lesson.objects.all()
 
     # Удаление уроков разрешено только владельцам уроков.
@@ -94,7 +128,11 @@ class LessonDestroyAPIView(generics.DestroyAPIView):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def subscribe_to_course(request, pk):
-    """Контроллер для подписки на курс"""
+    """
+    Subscribe to a course.
+
+    This function allows authenticated users to subscribe to a specific course.
+    """
 
     try:
         course = Course.objects.get(pk=pk)
@@ -115,13 +153,17 @@ def subscribe_to_course(request, pk):
         subscription = CourseSubscription.objects.create(user=request.user, course=course)
         subscription.is_subscribed = True
         subscription.save()
-        return Response({'detail': f'Подписка на курс {course.title } оформлена'}, status=status.HTTP_201_CREATED)
+        return Response({'detail': f'Подписка на курс {course.title} оформлена'}, status=status.HTTP_201_CREATED)
 
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def unsubscribe_from_course(request, pk):
-    """Контроллер для отписки от курса"""
+    """
+    Unsubscribe from a course.
+
+    This function allows authenticated users to unsubscribe from a specific course.
+    """
 
     try:
         course = Course.objects.get(pk=pk)
@@ -140,5 +182,3 @@ def unsubscribe_from_course(request, pk):
 
     except CourseSubscription.DoesNotExist:
         return Response({'detail': 'Вы не подписаны на курс {course.title}.'}, status=status.HTTP_400_BAD_REQUEST)
-
-
