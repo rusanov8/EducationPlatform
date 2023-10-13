@@ -41,7 +41,7 @@ class PaymentListApiView(generics.ListAPIView):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def payment_create(request, course_id):
+def payment_create(request, pk):
     """
        Create a new payment session for the specified course.
 
@@ -49,11 +49,11 @@ def payment_create(request, course_id):
        with a Stripe link and returns the session ID and payment link.
        """
 
-    course = Course.objects.get(pk=course_id)
+    course = Course.objects.get(pk=pk)
 
     session = create_stripe_session(course)
 
-    request.session['course_id'] = course_id
+    request.session['course_id'] = pk
 
     return Response({'session_id': session.id, 'payment_link': session.url})
 

@@ -1,6 +1,6 @@
 from rest_framework import viewsets, generics
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 
@@ -8,6 +8,8 @@ from education.models import Course, Lesson, CourseSubscription
 from education.paginators import BasePaginator
 from education.permissions import IsModerator, IsCourseOwner, IsLessonOwner
 from education.serializers import CourseSerializer, LessonSerializer, CourseDetailSerializer
+
+from education.tasks import send_update_email
 
 
 class CourseViewSet(viewsets.ModelViewSet):
@@ -46,6 +48,11 @@ class CourseViewSet(viewsets.ModelViewSet):
             permission_classes = []
 
         return [permission() for permission in permission_classes]
+
+    def perform_update(self, serializer):
+        instance = serializer.save()
+        send_update_email.delay(instance)
+
 
 
 class LessonCreateApiView(generics.CreateAPIView):
