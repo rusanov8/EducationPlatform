@@ -9,29 +9,25 @@ services:
 
   db:
     image: postgres
-    restart: always
-    environment:
-      - POSTGRES_PASSWORD=ais40609054
-      - PGDATA=/var/lib/postgresql/data/pgdata
+    env_file:
+      - .env
     volumes:
       - pg_data:/var/lib/postgresql/data
     ports:
       - '5432:5432'
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready"]
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
       timeout: 5s
       retries: 5
 
   adminer:
     image: adminer
-    restart: always
     ports:
       - '8081:8080'
 
   app:
     build: .
-    restart: always
     tty: true
     command: python manage.py migrate && python manage.py runserver 0.0.0.0:8000
     volumes:
